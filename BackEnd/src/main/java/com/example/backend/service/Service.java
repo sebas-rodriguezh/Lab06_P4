@@ -53,4 +53,19 @@ public class Service {
     public void delete(String name){
         countries.remove(name);
     }
+
+    public void create(Country c) throws Exception {
+        if(countries.containsKey(c.getName())) {
+            throw new Exception("El país ya existe");
+        }
+        countries.put(c.getName(), c);
+    }
+
+    public void update(String name, Country c) throws Exception {
+        if(!countries.containsKey(name)) {
+            throw new Exception("El país no existe");
+        }
+        countries.put(name, c);
+    }
+
 }

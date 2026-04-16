@@ -1,42 +1,48 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.example.backend.view;
 
 import com.example.backend.model.Country;
 import com.example.backend.service.Service;
-import jakarta.annotation.security.PermitAll;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@Path("/countries")
-@PermitAll
+@RestController
+@RequestMapping("/countries")
 public class Countries {
 
-    @GET
-    @Produces({MediaType.APPLICATION_JSON})
-    public List<Country> find(@DefaultValue("") @QueryParam("name") String name) { 
+    @GetMapping
+    public List<Country> find(@RequestParam(defaultValue = "") String name) {
         return Service.instance().find(name);
     }
-    
-    @GET
-    @Path("{name}")
-    @Produces({MediaType.APPLICATION_JSON})
-    public Country read(@PathParam("name") String name) {
+
+    @GetMapping("/{name}")
+    public Country read(@PathVariable String name) {
         try {
             return Service.instance().read(name);
         } catch (Exception ex) {
-            throw new NotFoundException(); 
+            throw new RuntimeException("Country not found");
         }
-    } 
-    
-    @DELETE
-    @Path("{name}")
-    public void delete(@PathParam("name") String name) {
+    }
+
+    @PostMapping
+    public void create(@RequestBody Country country) {
+        try {
+            Service.instance().create(country);
+        } catch (Exception ex) {
+            throw new RuntimeException("Error creating country");
+        }
+    }
+
+    @PutMapping("/{name}")
+    public void update(@PathVariable String name, @RequestBody Country country) {
+        try {
+            Service.instance().update(name, country);
+        } catch (Exception ex) {
+            throw new RuntimeException("Error updating country");
+        }
+    }
+
+    @DeleteMapping("/{name}")
+    public void delete(@PathVariable String name) {
         Service.instance().delete(name);
-    }     
+    }
 }
