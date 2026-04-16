@@ -11,39 +11,32 @@ import java.util.List;
 public class Countries {
 
     @GetMapping
-    public List<Country> find(@RequestParam(defaultValue = "") String name) {
-        return Service.instance().find(name);
-    }
-
-    @GetMapping("/{name}")
-    public Country read(@PathVariable String name) {
-        try {
-            return Service.instance().read(name);
-        } catch (Exception ex) {
-            throw new RuntimeException("Country not found");
-        }
+    public List<Country> findAll() {
+        return Service.instance().find("");
     }
 
     @PostMapping
-    public void create(@RequestBody Country country) {
-        try {
-            Service.instance().create(country);
-        } catch (Exception ex) {
-            throw new RuntimeException("Error creating country");
-        }
+    public void create(@RequestBody Country country) throws Exception {
+        Service.instance().create(country);
     }
 
-    @PutMapping("/{name}")
-    public void update(@PathVariable String name, @RequestBody Country country) {
-        try {
-            Service.instance().update(name, country);
-        } catch (Exception ex) {
-            throw new RuntimeException("Error updating country");
-        }
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable("id") String id) {
+        Service.instance().delete(id);
     }
 
-    @DeleteMapping("/{name}")
-    public void delete(@PathVariable String name) {
-        Service.instance().delete(name);
+    @GetMapping("/search")
+    public List<Country> search(@RequestParam("name") String name) {
+        return Service.instance().find(name);
+    }
+
+    @GetMapping("/{id}")
+    public Country read(@PathVariable("id") String id) throws Exception {
+        return Service.instance().read(id);
+    }
+
+    @PutMapping("/{id}")
+    public void update(@PathVariable("id") String id, @RequestBody Country country) throws Exception {
+        Service.instance().update(id, country);
     }
 }
