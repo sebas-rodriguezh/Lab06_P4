@@ -16,6 +16,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
@@ -23,7 +24,9 @@ public class SecurityConfig {
                                 "/styles.css",
                                 "/favicon.ico",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+                                "/countries",
+                                "/countries/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -32,7 +35,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails user = User.withUsername("admin")
