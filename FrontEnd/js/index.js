@@ -1,4 +1,5 @@
-var backend="http://localhost:8080/CountriesBackEnd/api";
+//var backend="http://localhost:8080/CountriesBackEnd/api";
+var backend="http://localhost:8080";
 
 var globalstate={user:null};
 

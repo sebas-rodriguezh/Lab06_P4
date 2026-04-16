@@ -7,6 +7,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/countries")
+@CrossOrigin(origins = "*")
 public class Countries {
 
     @GetMapping
