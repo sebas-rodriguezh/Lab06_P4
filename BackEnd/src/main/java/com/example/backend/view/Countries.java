@@ -11,22 +11,7 @@ import java.util.List;
 public class Countries {
 
     @GetMapping
-    public List<Country> findAll() {
-        return Service.instance().find("");
-    }
-
-    @PostMapping
-    public void create(@RequestBody Country country) throws Exception {
-        Service.instance().create(country);
-    }
-
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") String id) {
-        Service.instance().delete(id);
-    }
-
-    @GetMapping("/search")
-    public List<Country> search(@RequestParam("name") String name) {
+    public List<Country> find(@RequestParam(value = "name", required = false, defaultValue = "") String name) {
         return Service.instance().find(name);
     }
 
@@ -35,8 +20,18 @@ public class Countries {
         return Service.instance().read(id);
     }
 
+    @PostMapping
+    public void create(@RequestBody Country country) throws Exception {
+        Service.instance().create(country);
+    }
+
     @PutMapping("/{id}")
     public void update(@PathVariable("id") String id, @RequestBody Country country) throws Exception {
         Service.instance().update(id, country);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable("id") String id) {
+        Service.instance().delete(id);
     }
 }
