@@ -14,7 +14,6 @@ public class DataLoader {
     @Bean
     CommandLineRunner initDatabase() {
         return args -> {
-            // Aquí obtenemos la misma y única instancia del Service que usará el Controlador
             Service service = Service.instance();
 
             try {
