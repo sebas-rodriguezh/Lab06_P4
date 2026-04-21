@@ -61,12 +61,41 @@ class Countries{
                 <div class="modal-content">
                     <div class="modal-header" >
                         <img class="img-circle" id="img_logo" src="images/logo.png" style="max-width: 50px; max-height: 50px" alt="logo">
-                        <span style='margin-left:4em;font-weight: bold;'>Country</span> 
+                        <span style='margin-left:4em;font-weight: bold;'>País</span> 
                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form id="form" >
                     <div class="modal-body">
-                        <h1>To do</h1>       
+                        
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Nombre</span>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Capital</span>
+                            <input type="text" class="form-control" id="capital" name="capital" required>
+                        </div>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Población</span>
+                            <input type="number" class="form-control" id="population" name="population" required>
+                        </div>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Área</span>
+                            <input type="number" class="form-control" id="area" name="area" required>
+                        </div>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Latitud</span>
+                            <input type="number" class="form-control" id="lat" name="lat" required>
+                        </div>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Longitud</span>
+                            <input type="number" class="form-control" id="lng" name="lng" required>
+                        </div>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">URL de Bandera</span>
+                            <input type="text" class="form-control" id="flag" name="flag" required>
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button id="apply" type="button" class="btn btn-primary" >Aplicar</button>
@@ -77,14 +106,22 @@ class Countries{
         </div>      
         `;
     }
-
     showModal= async ()=>{
         // Load entity data into modal form
         this.modal.show();
     }
 
-    load=()=>{
-        // Save modal form data into entity        
+    load = () => {
+        this.state.entity.name = document.querySelector("#modal #name").value;
+        this.state.entity.capital = document.querySelector("#modal #capital").value;
+        this.state.entity.population = parseInt(document.querySelector("#modal #population").value) || 0;
+        this.state.entity.area = parseInt(document.querySelector("#modal #area").value) || 0;
+
+        const lat = parseInt(document.querySelector("#modal #lat").value) || 0;
+        const lng = parseInt(document.querySelector("#modal #lng").value) || 0;
+        this.state.entity.latlng = [lat, lng];
+
+        this.state.entity.flag = document.querySelector("#modal #flag").value;
     }
 
     reset=()=>{
@@ -93,25 +130,73 @@ class Countries{
 
     emptyEntity=()=>{
         // return an empty entity
+        return {
+            name: "",
+            capital: "",
+            population: 0,
+            area: 0,
+            latlng: [0, 0], // El backend espera un List<Integer>
+            flag: ""
+        };
     }
 
+    add = async () => {
+        // 1. Validar datos
+        if (!this.validate()) return;
 
-    add=()=>{
-        // Validate data, load into entity, invoque backend for adding
-        this.list();
-        this.reset();
-        this.modal.hide();
+        // 2. Cargar los datos del formulario a la entidad
+        this.load();
+
+        // 3. Invocar al backend (POST)
+        const request = new Request(`${backend}/countries`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this.state.entity)
+        });
+
+        try {
+            const response = await fetch(request);
+            if (!response.ok) { errorMessage(response.status); return; }
+
+            // 4. Refrescar la lista y limpiar
+            this.list();
+            this.reset();
+            this.modal.hide();
+        } catch (error) {
+            console.error("Error en la conexión:", error);
+        }
     }
 
-    update=()=>{
-        // Validate data, load into entity, invoque backend for updating
-        this.list();
-        this.reset();
-        this.modal.hide();
+    update = async () => {
+        if (!this.validate()) return;
+
+        this.load();
+
+        const request = new Request(`${backend}/countries`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this.state.entity)
+        });
+
+        try {
+            const response = await fetch(request);
+            if (!response.ok) { errorMessage(response.status); return; }
+
+            this.list();
+            this.reset();
+            this.modal.hide();
+        } catch (error) {
+            console.error("Error en la conexión:", error);
+        }
     }
 
     validate=()=>{
-        // validate data
+        const name = document.querySelector("#modal #name").value;
+        if (name.trim() === "") {
+            alert("El nombre del país es requerido.");
+            return false;
+        }
+        return true;
     }
 
     list=()=>{
