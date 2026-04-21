@@ -6,11 +6,12 @@ class Countries{
 
     constructor(){
         this.state = {'entities': new Array(), 'entity': this.emptyEntity(), 'mode':'A'};
-        this.dom=this.render();
+        this.dom = this.render();
         this.modal = new bootstrap.Modal(this.dom.querySelector('#modal'));
-        this.dom.querySelector("#countries #create").addEventListener('click',this.makenew);
-        this.dom.querySelector("#countries #search").addEventListener('click',this.search);
-        this.dom.querySelector('#countries #modal #form #apply').addEventListener('click',this.add);
+
+        this.dom.querySelector("#create").addEventListener('click', () => this.makenew());
+        this.dom.querySelector("#search").addEventListener('click', () => this.search());
+        this.dom.querySelector("#modal #apply").addEventListener('click', () => this.add());
     }
 
     render=()=>{
@@ -129,25 +130,21 @@ class Countries{
     }
 
     emptyEntity=()=>{
-        // return an empty entity
         return {
             name: "",
             capital: "",
             population: 0,
             area: 0,
-            latlng: [0, 0], // El backend espera un List<Integer>
+            latlng: [0, 0],
             flag: ""
         };
     }
 
     add = async () => {
-        // 1. Validar datos
         if (!this.validate()) return;
 
-        // 2. Cargar los datos del formulario a la entidad
         this.load();
 
-        // 3. Invocar al backend (POST)
         const request = new Request(`${backend}/countries`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -157,8 +154,6 @@ class Countries{
         try {
             const response = await fetch(request);
             if (!response.ok) { errorMessage(response.status); return; }
-
-            // 4. Refrescar la lista y limpiar
             this.list();
             this.reset();
             this.modal.hide();
