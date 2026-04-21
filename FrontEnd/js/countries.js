@@ -1,31 +1,30 @@
-class Countries{
+class Countries {
     dom;
     modal;
+    state;
 
-    state;  // state variables: entities, entity, mode (Add|Edit)
-
-    constructor(){
-        this.state = {'entities': new Array(), 'entity': this.emptyEntity(), 'mode':'A'};
+    constructor() {
+        this.state = { 'entities': new Array(), 'entity': this.emptyEntity(), 'mode': 'A' };
         this.dom = this.render();
         this.modal = new bootstrap.Modal(this.dom.querySelector('#modal'));
 
         this.dom.querySelector("#create").addEventListener('click', () => this.makenew());
         this.dom.querySelector("#search").addEventListener('click', () => this.search());
-        this.dom.querySelector("#modal #apply").addEventListener('click', () => this.add());
+        this.dom.querySelector("#modal #apply").addEventListener('click', () => this.save());
     }
 
-    render=()=>{
-        const html= `
+    render = () => {
+        const html = `
             ${this.renderList()}
             ${this.renderModal()}    
         `;
-        var rootContent= document.createElement('div');
-        rootContent.id='countries';
-        rootContent.innerHTML=html;
+        var rootContent = document.createElement('div');
+        rootContent.id = 'countries';
+        rootContent.innerHTML = html;
         return rootContent;
     }
 
-    renderList=()=>{
+    renderList = () => {
         return `
         <div id="list" class="container">     
             <div class="card bg-light">
@@ -44,7 +43,13 @@ class Countries{
 
                     <div class="table-responsive " style="max-height: 300px; overflow: auto">
                         <table class="table table-striped table-hover">
-                            <thead><tr><th scope="col">Name</th><th scope="col">Flag</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Flag</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
                             <tbody id="listbody">
                             </tbody>
                         </table>
@@ -55,7 +60,7 @@ class Countries{
         `;
     }
 
-    renderModal=()=>{
+    renderModal = () => {
         return `
         <div id="modal" class="modal fade" tabindex="-1">
             <div class="modal-dialog">
@@ -107,8 +112,21 @@ class Countries{
         </div>      
         `;
     }
-    showModal= async ()=>{
-        // Load entity data into modal form
+
+    showModal = async () => {
+        // Cargar los datos de la entidad a los inputs del modal
+        document.querySelector("#modal #name").value = this.state.entity.name;
+        document.querySelector("#modal #capital").value = this.state.entity.capital;
+        document.querySelector("#modal #population").value = this.state.entity.population;
+        document.querySelector("#modal #area").value = this.state.entity.area;
+
+        document.querySelector("#modal #lat").value = this.state.entity.latlng[0] !== undefined ? this.state.entity.latlng[0] : '';
+        document.querySelector("#modal #lng").value = this.state.entity.latlng[1] !== undefined ? this.state.entity.latlng[1] : '';
+
+        document.querySelector("#modal #flag").value = this.state.entity.flag;
+
+        document.querySelector("#modal #name").disabled = (this.state.mode === 'E');
+
         this.modal.show();
     }
 
@@ -125,11 +143,11 @@ class Countries{
         this.state.entity.flag = document.querySelector("#modal #flag").value;
     }
 
-    reset=()=>{
-        this.state.entity=this.emptyEntity();
+    reset = () => {
+        this.state.entity = this.emptyEntity();
     }
 
-    emptyEntity=()=>{
+    emptyEntity = () => {
         return {
             name: "",
             capital: "",
@@ -140,52 +158,7 @@ class Countries{
         };
     }
 
-    add = async () => {
-        if (!this.validate()) return;
-
-        this.load();
-
-        const request = new Request(`${backend}/countries`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(this.state.entity)
-        });
-
-        try {
-            const response = await fetch(request);
-            if (!response.ok) { errorMessage(response.status); return; }
-            this.list();
-            this.reset();
-            this.modal.hide();
-        } catch (error) {
-            console.error("Error en la conexión:", error);
-        }
-    }
-
-    update = async () => {
-        if (!this.validate()) return;
-
-        this.load();
-
-        const request = new Request(`${backend}/countries`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(this.state.entity)
-        });
-
-        try {
-            const response = await fetch(request);
-            if (!response.ok) { errorMessage(response.status); return; }
-
-            this.list();
-            this.reset();
-            this.modal.hide();
-        } catch (error) {
-            console.error("Error en la conexión:", error);
-        }
-    }
-
-    validate=()=>{
+    validate = () => {
         const name = document.querySelector("#modal #name").value;
         if (name.trim() === "") {
             alert("El nombre del país es requerido.");
@@ -194,43 +167,94 @@ class Countries{
         return true;
     }
 
-    list=()=>{
-        const request = new Request(`${backend}/countries`, {method: 'GET', headers: { }});
-        (async ()=>{
+    save = async () => {
+        if (!this.validate()) return;
+        this.load();
+
+        const isEdit = this.state.mode === 'E';
+        const url = isEdit ? `${backend}/countries/${this.state.entity.name}` : `${backend}/countries`;
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const request = new Request(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this.state.entity)
+        });
+
+        try {
             const response = await fetch(request);
-            if (!response.ok) {errorMessage(response.status);return;}
-            var countries = await response.json();
-            this.state.entities = countries;
-            var listing=this.dom.querySelector("#countries #list #listbody");
-            listing.innerHTML="";
-            this.state.entities.forEach( e=>this.row(listing,e));
+            if (!response.ok) { errorMessage(response.status); return; }
+
+            this.list();
+            this.reset();
+            this.modal.hide();
+        } catch (error) {
+            console.error("Error al guardar:", error);
+        }
+    }
+
+    list = () => {
+        const request = new Request(`${backend}/countries`, { method: 'GET', headers: {} });
+        (async () => {
+            try {
+                const response = await fetch(request);
+                if (!response.ok) { errorMessage(response.status); return; }
+
+                var countries = await response.json();
+                this.state.entities = countries;
+
+                var listing = this.dom.querySelector("#countries #list #listbody");
+                listing.innerHTML = "";
+                this.state.entities.forEach(e => this.row(listing, e));
+            } catch (error) {
+                console.error("Error al listar:", error);
+            }
         })();
     }
 
-    row=(list,c)=>{
-        var tr =document.createElement("tr");
-        tr.innerHTML=`
+    row = (list, c) => {
+        var tr = document.createElement("tr");
+        tr.innerHTML = `
                 <td>${c.name}</td>
-                <td><img class="flag" src="${c.flag}"></td>`;
+                <td><img class="flag" src="${c.flag}" style="max-height: 30px;"></td>
+                <td>
+                    <i class="fas fa-pencil-alt text-primary edit-btn" style="cursor:pointer;" title="Editar"></i>
+                </td>`;
+
+        tr.querySelector(".edit-btn").addEventListener('click', () => this.prepareEdit(c.name));
+
         list.append(tr);
     }
 
-    makenew=()=>{
+    makenew = () => {
         this.reset();
-        this.state.mode='A'; //adding
+        this.state.mode = 'A';
         this.showModal();
     }
 
-    search= async ()=>{
-        var nombre=document.querySelector('#countries #list #form #name').value;
-        let request = new Request(`${backend}/countries?name=${nombre}`,
-            {method: 'GET', headers: { }});
-        let response = await fetch(request);
-        if (!response.ok) {errorMessage(response.status);return;}
-        this.state.entities = await response.json();
-        var listing=this.dom.querySelector("#countries #list #listbody");
-        listing.innerHTML="";
-        this.state.entities.forEach( e=>this.row(listing,e));
+    prepareEdit = (name) => {
+        const found = this.state.entities.find(e => e.name === name);
+        if (found) {
+            this.state.entity = { ...found };
+            this.state.mode = 'E';
+            this.showModal();
+        }
     }
 
-} 
+    search = async () => {
+        var nombre = document.querySelector('#countries #list #form #name').value;
+        let request = new Request(`${backend}/countries?name=${nombre}`, { method: 'GET', headers: {} });
+
+        try {
+            let response = await fetch(request);
+            if (!response.ok) { errorMessage(response.status); return; }
+
+            this.state.entities = await response.json();
+            var listing = this.dom.querySelector("#countries #list #listbody");
+            listing.innerHTML = "";
+            this.state.entities.forEach(e => this.row(listing, e));
+        } catch (error) {
+            console.error("Error al buscar:", error);
+        }
+    }
+}
