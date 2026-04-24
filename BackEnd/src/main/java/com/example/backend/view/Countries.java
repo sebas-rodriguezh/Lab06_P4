@@ -17,7 +17,7 @@ public class Countries {
 
     @GetMapping("/{id}")
     public Country read(@PathVariable("id") String id) throws Exception {
-        return Service.instance().read(id);
+        return Service.instance().readById(id);
     }
 
     @PostMapping

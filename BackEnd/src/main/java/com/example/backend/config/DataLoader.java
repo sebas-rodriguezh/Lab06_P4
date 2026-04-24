@@ -17,14 +17,18 @@ public class DataLoader {
             Service service = Service.instance();
 
             try {
-                service.create(new Country("Costa Rica", "San José", 5058007, 51100,
+                service.create(new Country("CR", "Costa Rica", "San José", 5058007, 51100,
                         new ArrayList<>(Arrays.asList(10, -84)), "https://flagcdn.com/cr.svg"));
 
-                service.create(new Country("México", "Ciudad de México", 128932753, 1964375,
+                service.create(new Country("MX", "México", "Ciudad de México", 128932753, 1964375,
                         new ArrayList<>(Arrays.asList(23, -102)), "https://flagcdn.com/mx.svg"));
 
+                service.create(new Country("PA", "Panamá", "Ciudad de Panamá", 4314767, 75417,
+                        new ArrayList<>(Arrays.asList(9, -80)), "https://flagcdn.com/pa.svg"));
+
+
             } catch (Exception e) {
-                System.out.println("DataLoader: Hubo un error al cargar los países (tal vez ya existían).");
+                System.out.println("DataLoader: Hubo un error al cargar los países.");
             }
         };
     }

@@ -12,6 +12,7 @@ import java.util.List;
  * @author ESCINF
  */
 public class Country implements Serializable{
+    String id;  //Profe, se lo puse para poder hacer la búsqueda por ID.
     String name;
     String capital;
     long population;
@@ -20,7 +21,8 @@ public class Country implements Serializable{
     String flag;
 
     
-    public Country(String name, String capital, long population, long area, List<Integer> latlng, String flag) {
+    public Country(String id, String name, String capital, long population, long area, List<Integer> latlng, String flag) {
+        this.id = id;
         this.name = name;
         this.capital = capital;
         this.population = population;
@@ -77,5 +79,7 @@ public class Country implements Serializable{
         this.flag = flag;
     }
 
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
 }
