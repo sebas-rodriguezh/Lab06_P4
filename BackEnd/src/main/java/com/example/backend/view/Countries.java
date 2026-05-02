@@ -21,13 +21,15 @@ public class Countries {
     }
 
     @PostMapping
-    public void create(@RequestBody Country country) throws Exception {
+    public Country create(@RequestBody Country country) throws Exception {
         Service.instance().create(country);
+        return country;
     }
 
     @PutMapping("/{id}")
-    public void update(@PathVariable("id") String id, @RequestBody Country country) throws Exception {
+    public Country update(@PathVariable("id") String id, @RequestBody Country country) throws Exception {
         Service.instance().update(id, country);
+        return country;
     }
 
     @DeleteMapping("/{id}")

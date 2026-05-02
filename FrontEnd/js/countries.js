@@ -186,6 +186,10 @@ class Countries {
             const response = await fetch(request);
             if (!response.ok) { errorMessage(response.status); return; }
 
+            const savedCountry = await response.json();
+
+            if (!isEdit) this.state.entity = savedCountry;
+
             this.list();
             this.reset();
             this.modal.hide();

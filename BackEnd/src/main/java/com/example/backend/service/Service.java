@@ -63,13 +63,32 @@ public class Service {
         if(countries.containsKey(c.getName())) {
             throw new Exception("El país ya existe");
         }
+
+        if(c.getId() == null || c.getId().isEmpty())
+        {
+            c.setId(java.util.UUID.randomUUID().toString().substring(0, 5));
+        }
+
         countries.put(c.getName(), c);
     }
+
+//    public void update(String id, Country c) throws Exception {
+//        try {
+//            Country countryExistente = readById(id);
+//            countries.put(countryExistente.getName(), c);
+//        } catch (Exception e) {
+//            throw new Exception("El país no existe");
+//        }
+//    }
 
     public void update(String id, Country c) throws Exception {
         try {
             Country countryExistente = readById(id);
-            countries.put(countryExistente.getName(), c);
+            if (!countryExistente.getName().equals(c.getName())) {
+                countries.remove(countryExistente.getName());
+            }
+            c.setId(id);
+            countries.put(c.getName(), c);
         } catch (Exception e) {
             throw new Exception("El país no existe");
         }
