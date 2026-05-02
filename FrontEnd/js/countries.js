@@ -224,12 +224,29 @@ class Countries {
                 <td><img class="flag" src="${c.flag}" style="max-height: 30px;"></td>
                 <td>
                     <i class="fas fa-pencil-alt text-primary edit-btn" style="cursor:pointer;" title="Editar"></i>
-                </td>`;
+                    <i class="fas fa-trash text-primary delete-btn" style="cursor:pointer;" title="Eliminar"></i>
+                </td>`
+        ;
 
         tr.querySelector(".edit-btn").addEventListener('click', () => this.prepareEdit(c.name));
+        tr.querySelector(".delete-btn").addEventListener('click', () => this.delete(c));
 
         list.append(tr);
     }
+
+    delete = async (c) => {
+        let request = new Request(`${backend}/countries/${c.id}`, { method: 'DELETE', headers: {} });
+
+        if (confirm("¿Está seguro de eliminar este país?")) {
+            let response = await fetch(request);
+            if (!response.ok) { errorMessage(response.status); return; }
+            this.list();
+        } else
+        {
+            return;
+        }
+    }
+
 
     makenew = () => {
         this.reset();

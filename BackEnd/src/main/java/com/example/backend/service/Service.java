@@ -72,15 +72,6 @@ public class Service {
         countries.put(c.getName(), c);
     }
 
-//    public void update(String id, Country c) throws Exception {
-//        try {
-//            Country countryExistente = readById(id);
-//            countries.put(countryExistente.getName(), c);
-//        } catch (Exception e) {
-//            throw new Exception("El país no existe");
-//        }
-//    }
-
     public void update(String id, Country c) throws Exception {
         try {
             Country countryExistente = readById(id);
