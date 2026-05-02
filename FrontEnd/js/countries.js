@@ -149,6 +149,7 @@ class Countries {
 
     emptyEntity = () => {
         return {
+            id: "",
             name: "",
             capital: "",
             population: 0,
@@ -172,7 +173,7 @@ class Countries {
         this.load();
 
         const isEdit = this.state.mode === 'E';
-        const url = isEdit ? `${backend}/countries/${this.state.entity.name}` : `${backend}/countries`;
+        const url = isEdit ? `${backend}/countries/${this.state.entity.id}` : `${backend}/countries`;
         const method = isEdit ? 'PUT' : 'POST';
 
         const request = new Request(url, {
