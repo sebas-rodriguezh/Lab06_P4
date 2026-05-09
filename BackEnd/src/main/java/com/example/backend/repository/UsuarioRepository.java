@@ -14,8 +14,8 @@ public class UsuarioRepository {
 
     public UsuarioRepository() {
         Usuario admin = new Usuario("admin", "admin123", "ADMIN");
-        Usuario writer = new Usuario("escritor", "writer123", "WRITER");
-        Usuario reader = new Usuario("lector", "reader123", "READER");
+        Usuario writer = new Usuario("escritor", "escritor123", "WRITER");
+        Usuario reader = new Usuario("lector", "lector123", "READER");
 
         usuarios.put(admin.getUsername(), admin);
         usuarios.put(writer.getUsername(), writer);

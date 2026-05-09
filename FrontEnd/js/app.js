@@ -6,21 +6,22 @@ class App{
 
     countries; // Countries view
 
-    // constructor(){
-    //     this.state={};
-    //     this.dom=this.render();
-    //     this.modal = new bootstrap.Modal(this.dom.querySelector('#app>#modal'));
-    //     this.dom.querySelector('#app>#modal #apply').addEventListener('click',e=>this.login());
-    //     this.renderBodyFiller();
-    //     this.renderMenuItems();
-    //     this.countries = new Countries();
-    // }
-
     constructor(){
         this.state={};
         this.dom=this.render();
+
         this.modal = new bootstrap.Modal(this.dom.querySelector('#app>#modal'));
         this.dom.querySelector('#app>#modal #apply').addEventListener('click',e=>this.login());
+
+        this.registerModal = new bootstrap.Modal(this.dom.querySelector('#app>#registerModal'));
+        this.dom.querySelector('#app>#registerModal #btn-register').addEventListener('click',e=>this.register());
+
+        this.dom.querySelector('#register').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.modal.hide();
+            this.registerModal.show();
+        });
+
         this.countries = new Countries();
         this.renderMenuItems();
         this.countriesShow();
@@ -32,6 +33,7 @@ class App{
             ${this.renderBody()} 
             ${this.renderFooter()}
             ${this.renderModal()}
+            ${this.renderRegisterModal()}
         `;
         var rootContent= document.createElement('div');
         rootContent.id='app';
@@ -131,50 +133,48 @@ class App{
         this.dom.querySelector('#app>#body').innerHTML=html;
     }
 
-    // renderMenuItems=()=>{
-    //     var html='';
-    //     if(globalstate.user===null){
-    //         html+=`
-    //           <li class="nav-item">
-    //               <a class="nav-link" id="login" href="#" data-bs-toggle="modal"> <span><i class="fa fa-address-card"></i></span> Login </a>
-    //           </li>
-    //         `;
-    //     }else{
-    //         if(globalstate.user.rol==='CLI'){
-    //             html+=`
-    //                 <li class="nav-item">
-    //                     <a class="nav-link" id="countries" href="#"> <span><i class="fas fa-file-alt"></i></span> Countries </a>
-    //                 </li>
-    //             `;
-    //         }
-    //         if(globalstate.user.rol==='ADM'){
-    //             html+=`
-    //             `;
-    //         }
-    //         html+=`
-    //           <li class="nav-item">
-    //               <a class="nav-link" id="logout" href="#" data-bs-toggle="modal"> <span><i class="fas fa-power-off"></i></span> Logout (${globalstate.user.identificacion}) </a>
-    //           </li>
-    //         `;
-    //     };
-    //     this.dom.querySelector('#app>#menu #menuItems').replaceChildren();
-    //     this.dom.querySelector('#app>#menu #menuItems').innerHTML=html;
-    //     this.dom.querySelector("#app>#menu #menuItems #countries")?.addEventListener('click',e=>this.countriesShow());
-    //     this.dom.querySelector("#app>#menu #menuItems #login")?.addEventListener('click',e=>this.modal.show());
-    //     this.dom.querySelector("#app>#menu #menuItems #logout")?.addEventListener('click',e=>this.logout());
-    //     if(globalstate.user!==null){
-    //         switch(globalstate.user.rol){
-    //             case 'CLI':
-    //                 this.countriesShow();
-    //                 break;
-    //         }
-    //     }
-    // }
+    renderRegisterModal = () => {
+        return `
+        <div id="registerModal" class="modal fade" tabindex="-1">
+           <div class="modal-dialog">
+               <div class="modal-content">
+                   <div class="modal-header" >
+                       <img class="img-circle" id="img_logo" src="images/user.png" style="max-width: 50px; max-height: 50px" alt="logo">
+                       <span style='margin-left:4em;font-weight: bold;'>Registro de Usuario</span> 
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                   </div>
+                   <form id="registerForm" >
+                   <div class="modal-body">
+                       <div class="input-group mb-3">
+                           <span class="input-group-text">Usuario</span>
+                           <input type="text" class="form-control" id="reg_username" required>
+                       </div>  
+                       <div class="input-group mb-3">
+                           <span class="input-group-text">Clave</span>
+                           <input type="password" class="form-control" id="reg_password" required>
+                       </div>
+                       <div class="input-group mb-3">
+                           <span class="input-group-text">Rol</span>
+                           <select class="form-select" id="reg_rol">
+                               <option value="READER">Lector (Solo Editar)</option>
+                               <option value="WRITER">Escritor (Crear y Editar)</option>
+                               <option value="ADMIN">Administrador (Solo Borrar)</option>
+                           </select>
+                       </div>      
+                   </div>
+                   <div class="modal-footer">
+                       <button id="btn-register" type="button" class="btn btn-success">Registrar Cuenta</button>
+                   </div>               
+                   </form>                 
+               </div>         
+           </div>          
+       </div>   
+    `;
+    }
 
     renderMenuItems = () => {
         var html = '';
 
-        // SIEMPRE visible para que el anónimo pueda ver la tabla
         html += `
             <li class="nav-item">
                 <a class="nav-link" id="countries" href="#"> <span><i class="fas fa-file-alt"></i></span> Countries </a>
@@ -249,6 +249,41 @@ class App{
         globalstate.token = null;
         this.renderMenuItems();
         this.countriesShow();
+    }
+
+    register = async () => {
+        const usernameInput = this.dom.querySelector("#reg_username").value;
+        const passwordInput = this.dom.querySelector("#reg_password").value;
+        const rolInput = this.dom.querySelector("#reg_rol").value;
+
+        if(!usernameInput || !passwordInput) {
+            alert("Por favor, ingrese un usuario y una contraseña.");
+            return;
+        }
+
+        try {
+            const response = await fetchAPI('/api/auth/register', 'POST', {
+                username: usernameInput,
+                password: passwordInput,
+                rol: rolInput
+            });
+
+            if (!response.ok) {
+                alert("Error al registrar. Es posible que el nombre de usuario ya exista.");
+                return;
+            }
+
+            alert("¡Usuario registrado exitosamente! Ahora puede iniciar sesión.");
+
+            this.dom.querySelector("#reg_username").value = '';
+            this.dom.querySelector("#reg_password").value = '';
+
+            this.registerModal.hide();
+            this.modal.show();
+
+        } catch (error) {
+            console.error("Error en registro:", error);
+        }
     }
 
 } 
