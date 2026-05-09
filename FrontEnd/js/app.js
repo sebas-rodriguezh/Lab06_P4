@@ -6,14 +6,24 @@ class App{
 
     countries; // Countries view
 
+    // constructor(){
+    //     this.state={};
+    //     this.dom=this.render();
+    //     this.modal = new bootstrap.Modal(this.dom.querySelector('#app>#modal'));
+    //     this.dom.querySelector('#app>#modal #apply').addEventListener('click',e=>this.login());
+    //     this.renderBodyFiller();
+    //     this.renderMenuItems();
+    //     this.countries = new Countries();
+    // }
+
     constructor(){
         this.state={};
         this.dom=this.render();
         this.modal = new bootstrap.Modal(this.dom.querySelector('#app>#modal'));
         this.dom.querySelector('#app>#modal #apply').addEventListener('click',e=>this.login());
-        this.renderBodyFiller();
-        this.renderMenuItems();
         this.countries = new Countries();
+        this.renderMenuItems();
+        this.countriesShow();
     }
 
     render=()=>{
@@ -121,45 +131,77 @@ class App{
         this.dom.querySelector('#app>#body').innerHTML=html;
     }
 
-    renderMenuItems=()=>{
-        var html='';
-        if(globalstate.user===null){
-            html+=`
+    // renderMenuItems=()=>{
+    //     var html='';
+    //     if(globalstate.user===null){
+    //         html+=`
+    //           <li class="nav-item">
+    //               <a class="nav-link" id="login" href="#" data-bs-toggle="modal"> <span><i class="fa fa-address-card"></i></span> Login </a>
+    //           </li>
+    //         `;
+    //     }else{
+    //         if(globalstate.user.rol==='CLI'){
+    //             html+=`
+    //                 <li class="nav-item">
+    //                     <a class="nav-link" id="countries" href="#"> <span><i class="fas fa-file-alt"></i></span> Countries </a>
+    //                 </li>
+    //             `;
+    //         }
+    //         if(globalstate.user.rol==='ADM'){
+    //             html+=`
+    //             `;
+    //         }
+    //         html+=`
+    //           <li class="nav-item">
+    //               <a class="nav-link" id="logout" href="#" data-bs-toggle="modal"> <span><i class="fas fa-power-off"></i></span> Logout (${globalstate.user.identificacion}) </a>
+    //           </li>
+    //         `;
+    //     };
+    //     this.dom.querySelector('#app>#menu #menuItems').replaceChildren();
+    //     this.dom.querySelector('#app>#menu #menuItems').innerHTML=html;
+    //     this.dom.querySelector("#app>#menu #menuItems #countries")?.addEventListener('click',e=>this.countriesShow());
+    //     this.dom.querySelector("#app>#menu #menuItems #login")?.addEventListener('click',e=>this.modal.show());
+    //     this.dom.querySelector("#app>#menu #menuItems #logout")?.addEventListener('click',e=>this.logout());
+    //     if(globalstate.user!==null){
+    //         switch(globalstate.user.rol){
+    //             case 'CLI':
+    //                 this.countriesShow();
+    //                 break;
+    //         }
+    //     }
+    // }
+
+    renderMenuItems = () => {
+        var html = '';
+
+        // SIEMPRE visible para que el anónimo pueda ver la tabla
+        html += `
+            <li class="nav-item">
+                <a class="nav-link" id="countries" href="#"> <span><i class="fas fa-file-alt"></i></span> Countries </a>
+            </li>
+        `;
+
+        if (globalstate.user === null) {
+            html += `
               <li class="nav-item">
                   <a class="nav-link" id="login" href="#" data-bs-toggle="modal"> <span><i class="fa fa-address-card"></i></span> Login </a>
               </li>
             `;
-        }else{
-            if(globalstate.user.rol==='CLI'){
-                html+=`
-                    <li class="nav-item">
-                        <a class="nav-link" id="countries" href="#"> <span><i class="fas fa-file-alt"></i></span> Countries </a>
-                    </li>
-                `;
-            }
-            if(globalstate.user.rol==='ADM'){
-                html+=`
-                `;
-            }
-            html+=`
+        } else {
+            html += `
               <li class="nav-item">
-                  <a class="nav-link" id="logout" href="#" data-bs-toggle="modal"> <span><i class="fas fa-power-off"></i></span> Logout (${globalstate.user.identificacion}) </a>
+                  <a class="nav-link" id="logout" href="#" data-bs-toggle="modal"> <span><i class="fas fa-power-off"></i></span> Logout (${globalstate.user.username} - ${globalstate.user.rol}) </a>
               </li>
             `;
-        };
-        this.dom.querySelector('#app>#menu #menuItems').replaceChildren();
-        this.dom.querySelector('#app>#menu #menuItems').innerHTML=html;
-        this.dom.querySelector("#app>#menu #menuItems #countries")?.addEventListener('click',e=>this.countriesShow());
-        this.dom.querySelector("#app>#menu #menuItems #login")?.addEventListener('click',e=>this.modal.show());
-        this.dom.querySelector("#app>#menu #menuItems #logout")?.addEventListener('click',e=>this.logout());
-        if(globalstate.user!==null){
-            switch(globalstate.user.rol){
-                case 'CLI':
-                    this.countriesShow();
-                    break;
-            }
         }
+
+        this.dom.querySelector('#app>#menu #menuItems').replaceChildren();
+        this.dom.querySelector('#app>#menu #menuItems').innerHTML = html;
+        this.dom.querySelector("#app>#menu #menuItems #countries")?.addEventListener('click', e => this.countriesShow());
+        this.dom.querySelector("#app>#menu #menuItems #login")?.addEventListener('click', e => this.modal.show());
+        this.dom.querySelector("#app>#menu #menuItems #logout")?.addEventListener('click', e => this.logout());
     }
+
 
     countriesShow=()=>{
         this.dom.querySelector('#app>#body').replaceChildren(this.countries.dom);
@@ -167,13 +209,13 @@ class App{
     }
 
     login = async () => {
-        const formData = new FormData(this.dom.querySelector("#form"));
-        const candidate = Object.fromEntries(formData.entries());
+        const usernameInput = this.dom.querySelector("#identificacion").value;
+        const passwordInput = this.dom.querySelector("#clave").value;
 
         try {
             const response = await fetchAPI('/api/auth/login', 'POST', {
-                username: candidate.identificacion,
-                password: candidate.clave
+                username: usernameInput,
+                password: passwordInput
             });
 
             if (!response.ok) {
@@ -190,6 +232,10 @@ class App{
             globalstate.token = data.token;
 
             this.modal.hide();
+
+            this.dom.querySelector("#identificacion").value = '';
+            this.dom.querySelector("#clave").value = '';
+
             this.renderMenuItems();
             this.countriesShow();
 
@@ -201,10 +247,8 @@ class App{
     logout = () => {
         globalstate.user = null;
         globalstate.token = null;
-
-        this.dom.querySelector('#app>#body').replaceChildren();
-        this.renderBodyFiller();
         this.renderMenuItems();
+        this.countriesShow();
     }
 
 } 

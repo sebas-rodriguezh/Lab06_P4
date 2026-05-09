@@ -172,81 +172,112 @@ class Countries {
         if (!this.validate()) return;
         this.load();
 
-        const isEdit = this.state.mode === 'E';
-        const url = isEdit ? `${backend}/countries/${this.state.entity.id}` : `${backend}/countries`;
-        const method = isEdit ? 'PUT' : 'POST';
-
-        const request = new Request(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(this.state.entity)
-        });
-
         try {
-            const response = await fetch(request);
-            if (!response.ok) { errorMessage(response.status); return; }
+            if (this.state.mode === 'A') {
+                await fetchAPI('/countries', 'POST', this.state.entity);
+            } else {
+                await fetchAPI(`/countries/${this.state.entity.id}`, 'PUT', this.state.entity);
+            }
 
-            const savedCountry = await response.json();
-
-            if (!isEdit) this.state.entity = savedCountry;
-
-            this.list();
-            this.reset();
             this.modal.hide();
-        } catch (error) {
-            console.error("Error al guardar:", error);
+            this.reset();
+            this.search();
+
+        } catch(error) {
+            console.error("Fallo al guardar:", error);
         }
     }
 
-    list = () => {
-        const request = new Request(`${backend}/countries`, { method: 'GET', headers: {} });
-        (async () => {
-            try {
-                const response = await fetch(request);
-                if (!response.ok) { errorMessage(response.status); return; }
+    // list = () => {
+    //     const request = new Request(`${backend}/countries`, { method: 'GET', headers: {} });
+    //     (async () => {
+    //         try {
+    //             const response = await fetch(request);
+    //             if (!response.ok) { errorMessage(response.status); return; }
+    //
+    //             var countries = await response.json();
+    //             this.state.entities = countries;
+    //
+    //             var listing = this.dom.querySelector("#countries #list #listbody");
+    //             listing.innerHTML = "";
+    //             this.state.entities.forEach(e => this.row(listing, e));
+    //         } catch (error) {
+    //             console.error("Error al listar:", error);
+    //         }
+    //     })();
+    // }
 
-                var countries = await response.json();
-                this.state.entities = countries;
+    list = async () => {
+        try {
+            const response = await fetchAPI('/countries', 'GET');
+            this.state.entities = await response.json();
 
-                var listing = this.dom.querySelector("#countries #list #listbody");
-                listing.innerHTML = "";
-                this.state.entities.forEach(e => this.row(listing, e));
-            } catch (error) {
-                console.error("Error al listar:", error);
+            var listing = this.dom.querySelector("#countries #list #listbody");
+            listing.innerHTML = "";
+            this.state.entities.forEach(e => this.row(listing, e));
+
+            const btnCreate = this.dom.querySelector('#create');
+            const rolActual = globalstate.user ? globalstate.user.rol : null;
+
+            if (rolActual === 'WRITER') {
+                btnCreate.style.display = 'block';
+            } else {
+                btnCreate.style.display = 'none';
             }
-        })();
+
+        } catch (error) {
+            console.error("Error al listar:", error);
+        }
     }
+
 
     row = (list, c) => {
         var tr = document.createElement("tr");
-        tr.innerHTML = `
+
+        var html = `
                 <td>${c.name}</td>
                 <td><img class="flag" src="${c.flag}" style="max-height: 30px;"></td>
-                <td>
+
+                <td class="action-cell">
                     <i class="fas fa-pencil-alt text-primary edit-btn" style="cursor:pointer;" title="Editar"></i>
                     <i class="fas fa-trash text-primary delete-btn" style="cursor:pointer;" title="Eliminar"></i>
-                </td>`
-        ;
+                </td>
+        `;
+        tr.innerHTML = html;
 
-        tr.querySelector(".edit-btn").addEventListener('click', () => this.prepareEdit(c.name));
-        tr.querySelector(".delete-btn").addEventListener('click', () => this.delete(c));
+        const rolActual = globalstate.user ? globalstate.user.rol : null;
+        const btnEdit = tr.querySelector(".edit-btn");
+        const btnDelete = tr.querySelector(".delete-btn");
+
+        if (rolActual !== 'WRITER' && rolActual !== 'READER') {
+            btnEdit.style.display = 'none';
+        }
+
+        if (rolActual !== 'ADMIN') {
+            btnDelete.style.display = 'none';
+        }
+
+        if (btnEdit.style.display !== 'none') {
+            btnEdit.addEventListener('click', () => this.prepareEdit(c.name));
+        }
+
+        if (btnDelete.style.display !== 'none') {
+            btnDelete.addEventListener('click', () => this.delete(c));
+        }
 
         list.append(tr);
     }
 
     delete = async (c) => {
-        let request = new Request(`${backend}/countries/${c.id}`, { method: 'DELETE', headers: {} });
-
-        if (confirm("¿Está seguro de eliminar este país?")) {
-            let response = await fetch(request);
-            if (!response.ok) { errorMessage(response.status); return; }
-            this.list();
-        } else
-        {
-            return;
+        if (confirm(`¿Está seguro de eliminar a ${c.name}?`)) {
+            try {
+                await fetchAPI(`/countries/${c.id}`, 'DELETE');
+                this.search();
+            } catch (error) {
+                console.error("Fallo al eliminar:", error);
+            }
         }
     }
-
 
     makenew = () => {
         this.reset();
@@ -265,18 +296,26 @@ class Countries {
 
     search = async () => {
         var nombre = document.querySelector('#countries #list #form #name').value;
-        let request = new Request(`${backend}/countries?name=${nombre}`, { method: 'GET', headers: {} });
 
         try {
-            let response = await fetch(request);
-            if (!response.ok) { errorMessage(response.status); return; }
-
+            let response = await fetchAPI(`/countries?name=${nombre}`, 'GET');
             this.state.entities = await response.json();
+
             var listing = this.dom.querySelector("#countries #list #listbody");
             listing.innerHTML = "";
             this.state.entities.forEach(e => this.row(listing, e));
+
+            const btnCreate = this.dom.querySelector('#create');
+            const rolActual = globalstate.user ? globalstate.user.rol : null;
+
+            if (rolActual === 'WRITER') {
+                btnCreate.style.display = 'block';
+            } else {
+                btnCreate.style.display = 'none';
+            }
+
         } catch (error) {
-            console.error("Error al buscar:", error);
+            console.error("Error cargando países:", error);
         }
     }
 }
