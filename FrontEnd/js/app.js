@@ -166,22 +166,45 @@ class App{
         this.countries.list();
     }
 
-    login= async ()=>{
-        const candidate = Object.fromEntries( (new FormData(this.dom.querySelector("#form"))).entries());
-        candidate.rol='CLI';
-        // invoque backend for login
-        globalstate.user = candidate;
-        this.modal.hide();
-        this.renderMenuItems();
+    login = async () => {
+        const formData = new FormData(this.dom.querySelector("#form"));
+        const candidate = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetchAPI('/api/auth/login', 'POST', {
+                username: candidate.identificacion,
+                password: candidate.clave
+            });
+
+            if (!response.ok) {
+                alert("Usuario o contraseña incorrectos");
+                return;
+            }
+
+            const data = await response.json();
+
+            globalstate.user = {
+                username: data.username,
+                rol: data.rol
+            };
+            globalstate.token = data.token;
+
+            this.modal.hide();
+            this.renderMenuItems();
+            this.countriesShow();
+
+        } catch (error) {
+            console.error("Error en login:", error);
+        }
     }
 
-    logout= async ()=>{
-        // invoque backend for login
-        globalstate.user=null;
+    logout = () => {
+        globalstate.user = null;
+        globalstate.token = null;
+
         this.dom.querySelector('#app>#body').replaceChildren();
         this.renderBodyFiller();
         this.renderMenuItems();
-        let request = new Request(`${backend}/login`, {method: 'DELETE', headers: { }});
     }
 
 } 

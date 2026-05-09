@@ -33,6 +33,8 @@ public class AuthController {
     public AuthResponse login(@RequestBody AuthRequest request) throws Exception {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+            System.out.println("INTENTO DE LOGIN - Usuario recibido: [" + request.getUsername() + "]");
+            System.out.println("INTENTO DE LOGIN - Clave recibida: [" + request.getPassword() + "]");
         } catch (Exception e) {
             throw new Exception("Usuario o contraseña incorrectos");
         }
